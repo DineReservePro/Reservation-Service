@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	pb "reservation-service/generated/reservation_service"
 
@@ -62,7 +63,7 @@ func (r *RRestaurantRepo) GetRestaurant(ctx context.Context, req *pb.GetRestaura
 	err := r.DB.QueryRow(query, req.Id).Scan(
 		&restaurant.Id, &restaurant.Name, &restaurant.Address, &restaurant.PhoneNumber, &restaurant.Description)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("restaurant not found")
 		}
 		return nil, fmt.Errorf("failed to get restaurant: %v", err)
@@ -102,4 +103,3 @@ func (r *RRestaurantRepo) DeleteRestaurant(ctx context.Context, req *pb.DeleteRe
 	return &pb.DeleteRestaurantResponse{Message: "Restaurant deleted successfully"}, nil
 
 }
-
