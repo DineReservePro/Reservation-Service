@@ -95,7 +95,7 @@ func (r *RRestaurantRepo) DeleteRestaurant(ctx context.Context, req *pb.DeleteRe
 	var id string
 	err := r.DB.QueryRow(query, req.Id).Scan(&id)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("restaurant not found")
 		}
 		return nil, fmt.Errorf("failed to delete restaurant: %v", err)
