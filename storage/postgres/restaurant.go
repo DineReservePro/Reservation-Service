@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -19,7 +18,7 @@ func NewRRestaurantRepo(db *sql.DB) *ReservationRepo {
 	return &ReservationRepo{DB: db}
 }
 
-func (r *ReservationRepo) CreateRestaurant(ctx context.Context, req *pb.CreateRestaurantRequest) (*pb.CreateRestaurantResponse, error) {
+func (r *ReservationRepo) CreateRestaurant(req *pb.CreateRestaurantRequest) (*pb.CreateRestaurantResponse, error) {
 	query := `
 		INSERT INTO Restaurants (
 			name, 
@@ -42,7 +41,7 @@ func (r *ReservationRepo) CreateRestaurant(ctx context.Context, req *pb.CreateRe
 	`
 	restaurant := &pb.Restaurant{}
 
-	err := r.DB.QueryRowContext(ctx, query, req.Name, req.Address, req.PhoneNumber, req.Description).Scan(
+	err := r.DB.QueryRow(query, req.Name, req.Address, req.PhoneNumber, req.Description).Scan(
 		&restaurant.Id, &restaurant.Name, &restaurant.Address, &restaurant.PhoneNumber, &restaurant.Description)
 
 	if err != nil {
@@ -54,7 +53,7 @@ func (r *ReservationRepo) CreateRestaurant(ctx context.Context, req *pb.CreateRe
 func (r *ReservationRepo) ListRestaurants(req *pb.ListRestaurantsRequest) (*pb.ListRestaurantsResponse, error) {
 	var (
 		params = make(map[string]interface{})
-		args []interface{}
+		args   []interface{}
 		filter string
 	)
 
@@ -71,18 +70,18 @@ func (r *ReservationRepo) ListRestaurants(req *pb.ListRestaurantsRequest) (*pb.L
 			deleted_at = 0 
 	`
 
-	if req.Name != ""{
+	if req.Name != "" {
 		params["name"] = req.Name
 		filter += " AND name = :name "
 	}
-	if req.Address != ""{
+	if req.Address != "" {
 		params["address"] = req.Address
 		filter += " AND address = :address "
 	}
 	query += filter
 
-	query,args = ReplaceQueryParams(query,params)
-	rows, err := r.DB.Query(query,args...)
+	query, args = ReplaceQueryParams(query, params)
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list restaurants: %v", err)
 	}
@@ -99,7 +98,7 @@ func (r *ReservationRepo) ListRestaurants(req *pb.ListRestaurantsRequest) (*pb.L
 	return &pb.ListRestaurantsResponse{Restaurants: restaurants}, nil
 }
 
-func (r *ReservationRepo) GetRestaurant(ctx context.Context, req *pb.GetRestaurantRequest) (*pb.GetRestaurantResponse, error) {
+func (r *ReservationRepo) GetRestaurant(req *pb.GetRestaurantRequest) (*pb.GetRestaurantResponse, error) {
 	query := `
 		SELECT 
 			id, 
@@ -124,7 +123,7 @@ func (r *ReservationRepo) GetRestaurant(ctx context.Context, req *pb.GetRestaura
 	return &pb.GetRestaurantResponse{Restaurant: restaurant}, nil
 }
 
-func (r *ReservationRepo) UpdateRestaurant(ctx context.Context, req *pb.UpdateRestaurantRequest) (*pb.UpdateRestaurantResponse, error) {
+func (r *ReservationRepo) UpdateRestaurant(req *pb.UpdateRestaurantRequest) (*pb.UpdateRestaurantResponse, error) {
 	query := `
 		UPDATE 
 			Restaurants 
@@ -152,7 +151,7 @@ func (r *ReservationRepo) UpdateRestaurant(ctx context.Context, req *pb.UpdateRe
 	return &pb.UpdateRestaurantResponse{Restaurant: restaurant}, nil
 }
 
-func (r *ReservationRepo) DeleteRestaurant(ctx context.Context, req *pb.DeleteRestaurantRequest) (*pb.DeleteRestaurantResponse, error) {
+func (r *ReservationRepo) DeleteRestaurant(req *pb.DeleteRestaurantRequest) (*pb.DeleteRestaurantResponse, error) {
 	query := `
 		UPDATE 
 			Restaurants 
@@ -161,7 +160,7 @@ func (r *ReservationRepo) DeleteRestaurant(ctx context.Context, req *pb.DeleteRe
 		WHERE 
 			id = $1 AND deleted_at = 0
 	`
-	
+
 	_, err := r.DB.Exec(query, req.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

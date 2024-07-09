@@ -16,10 +16,10 @@ func TestCreateMenuItem(t *testing.T) {
 	menuRepo := NewRRestaurantRepo(db)
 
 	menu := pb.CreateMenuItemRequest{
-		RestaurantId: "",
-		Name:         "",
-		Description:  "",
-		Price:        0,
+		RestaurantId: "30823298-66ee-424e-9155-37eb79a50549",
+		Name:         "shdjkhafkh",
+		Description:  "sdfsa",
+		Price:        1111111,
 	}
 	res, err := menuRepo.CreateMenuItem(&menu)
 	if err != nil {

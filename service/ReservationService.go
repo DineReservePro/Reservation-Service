@@ -15,6 +15,51 @@ func NewRRestaurantService(reservation postgres.ReservationRepo)*ReservationServ
 	return &ReservationService{Reservation: reservation}
 }
 
+func (r *ReservationService) CreateRestaurant(ctx context.Context,restaurant *pb.CreateRestaurantRequest)(*pb.CreateRestaurantResponse,error){
+	res,err := r.Reservation.CreateRestaurant(restaurant)
+	if err != nil{
+		return nil,err
+	}
+	return res,nil
+}
+
+func (r *ReservationService) ListRestaurants(ctx context.Context, listRestaurant *pb.ListRestaurantsRequest)(*pb.ListRestaurantsResponse,error){
+	res,err := r.Reservation.ListRestaurants(listRestaurant)
+	if err != nil{
+		return nil,err
+	}
+	return res,nil
+}
+
+func (r *ReservationService) GetRestaurant(ctx context.Context, id *pb.GetRestaurantRequest)(*pb.GetRestaurantResponse,error){
+	res,err := r.Reservation.GetRestaurant(id)
+	if err != nil{
+		return nil,err
+	}
+	return res,nil
+}
+
+func (r *ReservationService) UpdateRestaurant(ctx context.Context,updateRestaurant *pb.UpdateRestaurantRequest)(*pb.UpdateRestaurantResponse,error){
+	res,err := r.Reservation.UpdateRestaurant(updateRestaurant)
+	if err != nil{
+		return nil,err
+	}
+	return res,nil
+}
+
+func (r *ReservationService) DeleteRestaurant(ctx context.Context, id *pb.DeleteRestaurantRequest)(*pb.DeleteRestaurantResponse,error){
+	res,err := r.Reservation.DeleteRestaurant(id)
+	if err != nil{
+		return nil,err
+	}
+	return res,nil
+}
+
+
+
+
+
+
 func (r *ReservationService) CreateReservation(ctx context.Context,reservation *pb.CreateReservationRequest)(*pb.CreateReservationResponse,error){
 	res,err := r.Reservation.CreateReservation(reservation)
 	if err != nil{
@@ -54,6 +99,12 @@ func (r *ReservationService) DeleteReservation(ctx context.Context, id *pb.Delet
 	}
 	return res,nil
 }
+
+
+
+
+
+
 
 func (r * ReservationService) CreateMenuItem(ctx context.Context, menu *pb.CreateMenuItemRequest)(*pb.CreateMenuItemResponse,error){
 	res,err := r.Reservation.CreateMenuItem(menu)
