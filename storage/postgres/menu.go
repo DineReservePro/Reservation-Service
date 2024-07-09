@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func (r *RRestaurantRepo) CreateMenuItem(menuItem *pb.CreateMenuItemRequest) (*pb.CreateMenuItemResponse, error) {
+func (r *ReservationRepo) CreateMenuItem(menuItem *pb.CreateMenuItemRequest) (*pb.CreateMenuItemResponse, error) {
 
 	menu := pb.CreateMenuItemResponse{}
 	err := r.DB.QueryRow(`
@@ -37,7 +37,7 @@ func (r *RRestaurantRepo) CreateMenuItem(menuItem *pb.CreateMenuItemRequest) (*p
 	return &menu, nil
 }
 
-func (r *RRestaurantRepo) ListMenuItems(listMenu *pb.ListMenuItemsRequest) (*pb.ListMenuItemsResponse, error) {
+func (r *ReservationRepo) ListMenuItems(listMenu *pb.ListMenuItemsRequest) (*pb.ListMenuItemsResponse, error) {
 	var (
 		params = make(map[string]interface{})
 		args   []interface{}
@@ -106,7 +106,7 @@ func ReplaceQueryParams(namedQuery string, params map[string]interface{}) (strin
 	return namedQuery, args
 }
 
-func (r *RRestaurantRepo) GetMenuItem(id *pb.GetMenuItemRequest) (*pb.GetMenuItemResponse, error) {
+func (r *ReservationRepo) GetMenuItem(id *pb.GetMenuItemRequest) (*pb.GetMenuItemResponse, error) {
 	itemMenu := pb.GetMenuItemResponse{}
 	err := r.DB.QueryRow(`	SELECT
 								id,
@@ -132,7 +132,7 @@ func (r *RRestaurantRepo) GetMenuItem(id *pb.GetMenuItemRequest) (*pb.GetMenuIte
 	return &itemMenu, nil
 }
 
-func (r *RRestaurantRepo) UpdateMenuItem(updateMenu *pb.UpdateMenuItemRequest) (*pb.UpdateMenuItemResponse, error) {
+func (r *ReservationRepo) UpdateMenuItem(updateMenu *pb.UpdateMenuItemRequest) (*pb.UpdateMenuItemResponse, error) {
 	menu := pb.UpdateMenuItemResponse{}
 	err := r.DB.QueryRow(`	
 						UPDATE 
@@ -158,7 +158,7 @@ func (r *RRestaurantRepo) UpdateMenuItem(updateMenu *pb.UpdateMenuItemRequest) (
 	return &menu, nil
 }
 
-func (r *RRestaurantRepo) DeleteMenuItem(id *pb.DeleteMenuItemRequest) (*pb.DeleteMenuItemResponse, error) {
+func (r *ReservationRepo) DeleteMenuItem(id *pb.DeleteMenuItemRequest) (*pb.DeleteMenuItemResponse, error) {
 	_,err := r.DB.Exec(`	DELETE
 				FROM
 					Menu

@@ -10,16 +10,16 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type RRestaurantRepo struct {
+type ReservationRepo struct {
 	pb.UnimplementedReservationServiceServer
 	DB *sql.DB
 }
 
-func NewRRestaurantRepo(db *sql.DB) *RRestaurantRepo {
-	return &RRestaurantRepo{DB: db}
+func NewRRestaurantRepo(db *sql.DB) *ReservationRepo {
+	return &ReservationRepo{DB: db}
 }
 
-func (r *RRestaurantRepo) CreateRestaurant(ctx context.Context, req *pb.CreateRestaurantRequest) (*pb.CreateRestaurantResponse, error) {
+func (r *ReservationRepo) CreateRestaurant(ctx context.Context, req *pb.CreateRestaurantRequest) (*pb.CreateRestaurantResponse, error) {
 	query := `
 		INSERT INTO Restaurants (
 			name, 
@@ -51,7 +51,7 @@ func (r *RRestaurantRepo) CreateRestaurant(ctx context.Context, req *pb.CreateRe
 	return &pb.CreateRestaurantResponse{Restaurant: restaurant}, nil
 }
 
-func (r *RRestaurantRepo) ListRestaurants(req *pb.ListRestaurantsRequest) (*pb.ListRestaurantsResponse, error) {
+func (r *ReservationRepo) ListRestaurants(req *pb.ListRestaurantsRequest) (*pb.ListRestaurantsResponse, error) {
 	var (
 		params = make(map[string]interface{})
 		args []interface{}
@@ -99,7 +99,7 @@ func (r *RRestaurantRepo) ListRestaurants(req *pb.ListRestaurantsRequest) (*pb.L
 	return &pb.ListRestaurantsResponse{Restaurants: restaurants}, nil
 }
 
-func (r *RRestaurantRepo) GetRestaurant(ctx context.Context, req *pb.GetRestaurantRequest) (*pb.GetRestaurantResponse, error) {
+func (r *ReservationRepo) GetRestaurant(ctx context.Context, req *pb.GetRestaurantRequest) (*pb.GetRestaurantResponse, error) {
 	query := `
 		SELECT 
 			id, 
@@ -124,7 +124,7 @@ func (r *RRestaurantRepo) GetRestaurant(ctx context.Context, req *pb.GetRestaura
 	return &pb.GetRestaurantResponse{Restaurant: restaurant}, nil
 }
 
-func (r *RRestaurantRepo) UpdateRestaurant(ctx context.Context, req *pb.UpdateRestaurantRequest) (*pb.UpdateRestaurantResponse, error) {
+func (r *ReservationRepo) UpdateRestaurant(ctx context.Context, req *pb.UpdateRestaurantRequest) (*pb.UpdateRestaurantResponse, error) {
 	query := `
 		UPDATE 
 			Restaurants 
@@ -152,7 +152,7 @@ func (r *RRestaurantRepo) UpdateRestaurant(ctx context.Context, req *pb.UpdateRe
 	return &pb.UpdateRestaurantResponse{Restaurant: restaurant}, nil
 }
 
-func (r *RRestaurantRepo) DeleteRestaurant(ctx context.Context, req *pb.DeleteRestaurantRequest) (*pb.DeleteRestaurantResponse, error) {
+func (r *ReservationRepo) DeleteRestaurant(ctx context.Context, req *pb.DeleteRestaurantRequest) (*pb.DeleteRestaurantResponse, error) {
 	query := `
 		UPDATE 
 			Restaurants 
