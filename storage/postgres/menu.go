@@ -29,7 +29,7 @@ func (r *ReservationRepo) CreateMenuItem(menuItem *pb.CreateMenuItemRequest) (*p
 			description,
 			price`,
 		menuItem.RestaurantId, menuItem.Name, menuItem.Description, menuItem.Price,
-	).Scan(menu.Id, menu.RestaurantId, menu.Name, menu.Description, menu.Price)
+	).Scan(&menu.Id, &menu.RestaurantId, &menu.Name, &menu.Description, &menu.Price)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (r *ReservationRepo) ListMenuItems(listMenu *pb.ListMenuItemsRequest) (*pb.
 	ListMenu := []*pb.MenuItem{}
 	for rows.Next() {
 		menu := pb.MenuItem{}
-		err := rows.Scan(menu.Id, menu.RestaurantId, menu.Name, menu.Description, menu.Price)
+		err := rows.Scan(&menu.Id, &menu.RestaurantId, &menu.Name, &menu.Description, &menu.Price)
 		if err != nil {
 			return nil, err
 		}
@@ -121,11 +121,11 @@ func (r *ReservationRepo) GetMenuItem(id *pb.GetMenuItemRequest) (*pb.GetMenuIte
 								id = $1`,
 		id.Id).
 		Scan(
-			itemMenu.Id,
-			itemMenu.RestaurantId,
-			itemMenu.Name,
-			itemMenu.Description,
-			itemMenu.Price,
+			&itemMenu.Id,
+			&itemMenu.RestaurantId,
+			&itemMenu.Name,
+			&itemMenu.Description,
+			&itemMenu.Price,
 		)
 	if err != nil {
 		return nil, err
@@ -152,7 +152,7 @@ func (r *ReservationRepo) UpdateMenuItem(updateMenu *pb.UpdateMenuItemRequest) (
 						description,
 						price
 					`, updateMenu.RestaurantId, updateMenu.Name, updateMenu.Description, updateMenu.Price, updateMenu.Id).
-		Scan(menu.Id, menu.RestaurantId, menu.Name, menu.Description, menu.Price)
+		Scan(&menu.Id, &menu.RestaurantId, &menu.Name, &menu.Description, &menu.Price)
 	if err != nil {
 		return nil, err
 	}
