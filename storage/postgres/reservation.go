@@ -22,9 +22,24 @@ func NewRReservationRepo(db *sql.DB) *RReservationRepo {
 
 func (r *RReservationRepo) CreateReservation(ctx context.Context, req *pb.CreateReservationRequest) (*pb.CreateReservationResponse, error) {
 	query := `
-		INSERT INTO reservations (user_id, restaurant_id, reservation_time, status)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id, user_id, restaurant_id, reservation_time, status;
+		INSERT INTO reservations (
+			user_id, 
+			restaurant_id, 
+			reservation_time, 
+			status
+		)
+		VALUES (
+			$1, 
+			$2, 
+			$3, 
+			$4
+		)
+		RETURNING 
+			id, 
+			user_id, 
+			restaurant_id, 
+			reservation_time, 
+			status;
 	`
 	reservation := &pb.Reservation{}
 	err := r.DB.QueryRowContext(ctx, query, req.UserId, req.RestaurantId, req.ReservationTime, req.Status).Scan(
@@ -36,7 +51,16 @@ func (r *RReservationRepo) CreateReservation(ctx context.Context, req *pb.Create
 }
 
 func (r *RReservationRepo) ListReservations(ctx context.Context, req *pb.ListReservationsRequest) (*pb.ListReservationsResponse, error) {
-	query := `SELECT id, user_id, restaurant_id, reservation_time, status FROM reservations WHERE deleted_at = 0;`
+	query := `
+		SELECT 
+			id, 
+			user_id, 
+			restaurant_id, 
+			reservation_time, 
+			status 
+		FROM 
+			reservations 
+		WHERE deleted_at = 0;`
 	rows, err := r.DB.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list reservations: %v", err)
@@ -56,7 +80,15 @@ func (r *RReservationRepo) ListReservations(ctx context.Context, req *pb.ListRes
 
 func (r *RReservationRepo) GetReservation(ctx context.Context, req *pb.GetReservationRequest) (*pb.GetReservationResponse, error) {
 	query := `
-		SELECT id, user_id, restaurant_id, reservation_time, status FROM reservations WHERE id = $1 AND deleted_at = 0;
+		SELECT 
+			id, 
+			user_id, 
+			restaurant_id, 
+			reservation_time, 
+			status 
+		FROM 
+			reservations 
+		WHERE id = $1 AND deleted_at = 0;
 	`
 	reservation := &pb.Reservation{}
 	err := r.DB.QueryRowContext(ctx, query, req.Id).Scan(
@@ -72,9 +104,22 @@ func (r *RReservationRepo) GetReservation(ctx context.Context, req *pb.GetReserv
 
 func (r *RReservationRepo) UpdateReservation(ctx context.Context, req *pb.UpdateReservationRequest) (*pb.UpdateReservationResponse, error) {
 	query := `
-		UPDATE reservations SET user_id = $2, restaurant_id = $3, reservation_time = $4, status = $5, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $1 AND deleted_at = 0
-		RETURNING id, user_id, restaurant_id, reservation_time, status;
+		UPDATE 
+			reservations 
+		SET 
+			user_id = $2, 
+			restaurant_id = $3, 
+			reservation_time = $4, 
+			status = $5, 
+			updated_at = CURRENT_TIMESTAMP
+		WHERE 
+			id = $1 AND deleted_at = 0
+		RETURNING 
+			id, 
+			user_id, 
+			restaurant_id, 
+			reservation_time, 
+			status;
 	`
 	reservation := &pb.Reservation{}
 	err := r.DB.QueryRowContext(ctx, query, req.Id, req.UserId, req.RestaurantId, req.ReservationTime, req.Status).Scan(
@@ -87,12 +132,15 @@ func (r *RReservationRepo) UpdateReservation(ctx context.Context, req *pb.Update
 
 func (r *RReservationRepo) DeleteReservation(ctx context.Context, req *pb.DeleteReservationRequest) (*pb.DeleteReservationResponse, error) {
 	query := `
-		UPDATE reservations SET deleted_at = EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)
-		WHERE id = $1 AND deleted_at = 0
-		RETURNING id;
+		UPDATE 
+			reservations 
+		SET 
+			deleted_at = EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)
+		WHERE 
+			id = $1 AND deleted_at = 0;
 	`
-	var id string
-	err := r.DB.QueryRowContext(ctx, query, req.Id).Scan(&id)
+	
+	_, err := r.DB.ExecContext(ctx, query, req.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("reservation not found")
