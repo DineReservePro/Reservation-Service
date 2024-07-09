@@ -11,16 +11,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type RReservationRepo struct {
-	pb.UnimplementedReservationServiceServer
-	DB *sql.DB
-}
-
-func NewRReservationRepo(db *sql.DB) *RReservationRepo {
-	return &RReservationRepo{DB: db}
-}
-
-func (r *RReservationRepo) CreateReservation(ctx context.Context, req *pb.CreateReservationRequest) (*pb.CreateReservationResponse, error) {
+func (r *ReservationRepo) CreateReservation(ctx context.Context, req *pb.CreateReservationRequest) (*pb.CreateReservationResponse, error) {
 	query := `
 		INSERT INTO reservations (
 			user_id, 
@@ -50,7 +41,7 @@ func (r *RReservationRepo) CreateReservation(ctx context.Context, req *pb.Create
 	return &pb.CreateReservationResponse{Reservation: reservation}, nil
 }
 
-func (r *RReservationRepo) ListReservations(req *pb.ListReservationsRequest) (*pb.ListReservationsResponse, error) {
+func (r *ReservationRepo) ListReservations(req *pb.ListReservationsRequest) (*pb.ListReservationsResponse, error) {
 	var (
 		params = make(map[string]interface{})
 		args []interface{}
@@ -100,7 +91,7 @@ func (r *RReservationRepo) ListReservations(req *pb.ListReservationsRequest) (*p
 	return &pb.ListReservationsResponse{Reservations: reservations}, nil
 }
 
-func (r *RReservationRepo) GetReservation(ctx context.Context, req *pb.GetReservationRequest) (*pb.GetReservationResponse, error) {
+func (r *ReservationRepo) GetReservation(ctx context.Context, req *pb.GetReservationRequest) (*pb.GetReservationResponse, error) {
 	query := `
 		SELECT 
 			id, 
@@ -124,7 +115,7 @@ func (r *RReservationRepo) GetReservation(ctx context.Context, req *pb.GetReserv
 	return &pb.GetReservationResponse{Reservation: reservation}, nil
 }
 
-func (r *RReservationRepo) UpdateReservation(ctx context.Context, req *pb.UpdateReservationRequest) (*pb.UpdateReservationResponse, error) {
+func (r *ReservationRepo) UpdateReservation(ctx context.Context, req *pb.UpdateReservationRequest) (*pb.UpdateReservationResponse, error) {
 	query := `
 		UPDATE 
 			reservations 
@@ -152,7 +143,7 @@ func (r *RReservationRepo) UpdateReservation(ctx context.Context, req *pb.Update
 	return &pb.UpdateReservationResponse{Reservation: reservation}, nil
 }
 
-func (r *RReservationRepo) DeleteReservation(ctx context.Context, req *pb.DeleteReservationRequest) (*pb.DeleteReservationResponse, error) {
+func (r *ReservationRepo) DeleteReservation(ctx context.Context, req *pb.DeleteReservationRequest) (*pb.DeleteReservationResponse, error) {
 	query := `
 		UPDATE 
 			reservations 
