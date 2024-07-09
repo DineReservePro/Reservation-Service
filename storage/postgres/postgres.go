@@ -9,9 +9,10 @@ import (
 )
 
 func Conn() (*sql.DB, error) {
-	cfg := config.Config{}
-	conn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cfg.DB_HOST, cfg.DB_PORT, cfg.DB_USERNAME, cfg.DB_PASSWORD, cfg.DB_DATABASE)
+	cfg := config.Load()
+	conn := fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=disable",
+		cfg.DB_HOST, cfg.DB_PORT, cfg.DB_USERNAME, cfg.DB_DATABASE, cfg.DB_PASSWORD, )
+	fmt.Println(conn)
 
 	db, err := sql.Open("postgres", conn)
 	if err != nil {

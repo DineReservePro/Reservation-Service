@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -11,7 +10,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func (r *ReservationRepo) CreateReservation(ctx context.Context, req *pb.CreateReservationRequest) (*pb.CreateReservationResponse, error) {
+func (r *ReservationRepo) CreateReservation(req *pb.CreateReservationRequest) (*pb.CreateReservationResponse, error) {
 	query := `
 		INSERT INTO reservations (
 			user_id, 
@@ -33,7 +32,7 @@ func (r *ReservationRepo) CreateReservation(ctx context.Context, req *pb.CreateR
 			status;
 	`
 	reservation := &pb.Reservation{}
-	err := r.DB.QueryRowContext(ctx, query, req.UserId, req.RestaurantId, req.ReservationTime, req.Status).Scan(
+	err := r.DB.QueryRow(query, req.UserId, req.RestaurantId, req.ReservationTime, req.Status).Scan(
 		&reservation.Id, &reservation.UserId, &reservation.RestaurantId, &reservation.ReservationTime, &reservation.Status)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create reservation: %v", err)
@@ -44,7 +43,7 @@ func (r *ReservationRepo) CreateReservation(ctx context.Context, req *pb.CreateR
 func (r *ReservationRepo) ListReservations(req *pb.ListReservationsRequest) (*pb.ListReservationsResponse, error) {
 	var (
 		params = make(map[string]interface{})
-		args []interface{}
+		args   []interface{}
 		filter string
 	)
 	query := `
@@ -57,24 +56,24 @@ func (r *ReservationRepo) ListReservations(req *pb.ListReservationsRequest) (*pb
 		FROM 
 			reservations 
 		WHERE deleted_at = 0 `
-	
-	if req.RestaurantId != ""{
+
+	if req.RestaurantId != "" {
 		params["restaurant_id"] = req.RestaurantId
 		filter += "AND restaurant_id = :restaurant_id"
 	}
-	if req.ReservationTime != ""{
+	if req.ReservationTime != "" {
 		params["reservation_time"] = req.ReservationTime
 		filter += "AND reservation_time = :reservation_time"
 	}
-	if req.Status != ""{
+	if req.Status != "" {
 		params["status"] = req.Status
 		filter += "AND status = :status"
 	}
 	query += filter
 
-	query,args = ReplaceQueryParams(query,params)
+	query, args = ReplaceQueryParams(query, params)
 
-	rows, err := r.DB.Query(query,args...)
+	rows, err := r.DB.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list reservations: %v", err)
 	}
@@ -91,7 +90,7 @@ func (r *ReservationRepo) ListReservations(req *pb.ListReservationsRequest) (*pb
 	return &pb.ListReservationsResponse{Reservations: reservations}, nil
 }
 
-func (r *ReservationRepo) GetReservation(ctx context.Context, req *pb.GetReservationRequest) (*pb.GetReservationResponse, error) {
+func (r *ReservationRepo) GetReservation(req *pb.GetReservationRequest) (*pb.GetReservationResponse, error) {
 	query := `
 		SELECT 
 			id, 
@@ -104,7 +103,7 @@ func (r *ReservationRepo) GetReservation(ctx context.Context, req *pb.GetReserva
 		WHERE id = $1 AND deleted_at = 0;
 	`
 	reservation := &pb.Reservation{}
-	err := r.DB.QueryRowContext(ctx, query, req.Id).Scan(
+	err := r.DB.QueryRow(query, req.Id).Scan(
 		&reservation.Id, &reservation.UserId, &reservation.RestaurantId, &reservation.ReservationTime, &reservation.Status)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -115,7 +114,7 @@ func (r *ReservationRepo) GetReservation(ctx context.Context, req *pb.GetReserva
 	return &pb.GetReservationResponse{Reservation: reservation}, nil
 }
 
-func (r *ReservationRepo) UpdateReservation(ctx context.Context, req *pb.UpdateReservationRequest) (*pb.UpdateReservationResponse, error) {
+func (r *ReservationRepo) UpdateReservation(req *pb.UpdateReservationRequest) (*pb.UpdateReservationResponse, error) {
 	query := `
 		UPDATE 
 			reservations 
@@ -135,7 +134,7 @@ func (r *ReservationRepo) UpdateReservation(ctx context.Context, req *pb.UpdateR
 			status;
 	`
 	reservation := &pb.Reservation{}
-	err := r.DB.QueryRowContext(ctx, query, req.Id, req.UserId, req.RestaurantId, req.ReservationTime, req.Status).Scan(
+	err := r.DB.QueryRow(query, req.Id, req.UserId, req.RestaurantId, req.ReservationTime, req.Status).Scan(
 		&reservation.Id, &reservation.UserId, &reservation.RestaurantId, &reservation.ReservationTime, &reservation.Status)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update reservation: %v", err)
@@ -143,7 +142,7 @@ func (r *ReservationRepo) UpdateReservation(ctx context.Context, req *pb.UpdateR
 	return &pb.UpdateReservationResponse{Reservation: reservation}, nil
 }
 
-func (r *ReservationRepo) DeleteReservation(ctx context.Context, req *pb.DeleteReservationRequest) (*pb.DeleteReservationResponse, error) {
+func (r *ReservationRepo) DeleteReservation(req *pb.DeleteReservationRequest) (*pb.DeleteReservationResponse, error) {
 	query := `
 		UPDATE 
 			reservations 
@@ -152,8 +151,8 @@ func (r *ReservationRepo) DeleteReservation(ctx context.Context, req *pb.DeleteR
 		WHERE 
 			id = $1 AND deleted_at = 0;
 	`
-	
-	_, err := r.DB.ExecContext(ctx, query, req.Id)
+
+	_, err := r.DB.Exec(query, req.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("reservation not found")

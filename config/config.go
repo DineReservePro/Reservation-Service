@@ -1,38 +1,42 @@
 package config
 
 import (
-	"github.com/joho/godotenv"
-	"github.com/spf13/cast"
 	"log"
 	"os"
+
+	"github.com/joho/godotenv"
+	"github.com/spf13/cast"
 )
 
 type Config struct {
-	GRPC_PORT   string
 	DB_HOST     string
 	DB_PORT     int
 	DB_USERNAME string
 	DB_DATABASE string
 	DB_PASSWORD string
+	GRPC_PORT   string
 }
 
 func Load() Config {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Error loading .env file")
 	}
 
 	cfg := Config{}
+	cfg.DB_HOST = cast.ToString(Coalesce("DB_HOST", "localhost"))
+	cfg.DB_PORT = cast.ToInt(Coalesce("DB_PORT", 5432))
+	cfg.DB_USERNAME = cast.ToString(Coalesce("DB_USERNAME", "postgres"))
+	cfg.DB_DATABASE = cast.ToString(Coalesce("DB_DATABASE", "nt"))
+	cfg.DB_PASSWORD = cast.ToString(Coalesce("DB_PASSWORD", "0412"))
+	cfg.GRPC_PORT = cast.ToString(Coalesce("GRPC_PORT", "50051"))
 
-	cfg.DB_HOST = cast.ToString(coalesce("DB_HOST", "localhost"))
 	return cfg
 }
 
-func coalesce(key string, defaultValue interface{}) interface{} {
+func Coalesce(key string, defaultValue interface{}) interface{} {
 	value, exists := os.LookupEnv(key)
-
 	if exists {
 		return value
 	}
-
 	return defaultValue
 }

@@ -8,10 +8,9 @@ import (
 
 func (r *ReservationRepo) CreateMenuItem(menuItem *pb.CreateMenuItemRequest) (*pb.CreateMenuItemResponse, error) {
 
-	menu := pb.CreateMenuItemResponse{}
+	menu := pb.MenuItem{}
 	err := r.DB.QueryRow(`
-		INSERT INTO 
-		Menu(
+		INSERT INTO Menu (
 			restaurant_id,
 			name,
 			description,
@@ -30,11 +29,13 @@ func (r *ReservationRepo) CreateMenuItem(menuItem *pb.CreateMenuItemRequest) (*p
 			description,
 			price`,
 		menuItem.RestaurantId, menuItem.Name, menuItem.Description, menuItem.Price,
-	).Scan(menu.MenuItem.Id, menu.MenuItem.RestaurantId, menu.MenuItem.Name, menu.MenuItem.Description, menu.MenuItem.Price)
+	).Scan(menu.Id, menu.RestaurantId, menu.Name, menu.Description, menu.Price)
 	if err != nil {
 		return nil, err
 	}
-	return &menu, nil
+	return &pb.CreateMenuItemResponse{
+		MenuItem: &menu,
+	}, nil
 }
 
 func (r *ReservationRepo) ListMenuItems(listMenu *pb.ListMenuItemsRequest) (*pb.ListMenuItemsResponse, error) {
@@ -77,16 +78,16 @@ func (r *ReservationRepo) ListMenuItems(listMenu *pb.ListMenuItemsRequest) (*pb.
 	if err != nil {
 		return nil, err
 	}
-	ListMenu := pb.ListMenuItemsResponse{}
+	ListMenu := []*pb.MenuItem{}
 	for rows.Next() {
 		menu := pb.MenuItem{}
 		err := rows.Scan(menu.Id, menu.RestaurantId, menu.Name, menu.Description, menu.Price)
 		if err != nil {
 			return nil, err
 		}
-		ListMenu.MenuItems = append(ListMenu.MenuItems, &menu)
+		ListMenu = append(ListMenu, &menu)
 	}
-	return &ListMenu, nil
+	return &pb.ListMenuItemsResponse{MenuItems: ListMenu}, nil
 }
 
 func ReplaceQueryParams(namedQuery string, params map[string]interface{}) (string, []interface{}) {
@@ -107,7 +108,7 @@ func ReplaceQueryParams(namedQuery string, params map[string]interface{}) (strin
 }
 
 func (r *ReservationRepo) GetMenuItem(id *pb.GetMenuItemRequest) (*pb.GetMenuItemResponse, error) {
-	itemMenu := pb.GetMenuItemResponse{}
+	itemMenu := pb.MenuItem{}
 	err := r.DB.QueryRow(`	SELECT
 								id,
 								restaurant_id,
@@ -120,20 +121,20 @@ func (r *ReservationRepo) GetMenuItem(id *pb.GetMenuItemRequest) (*pb.GetMenuIte
 								id = $1`,
 		id.Id).
 		Scan(
-			itemMenu.MenuItem.Id,
-			itemMenu.MenuItem.RestaurantId,
-			itemMenu.MenuItem.Name,
-			itemMenu.MenuItem.Description,
-			itemMenu.MenuItem.Price,
+			itemMenu.Id,
+			itemMenu.RestaurantId,
+			itemMenu.Name,
+			itemMenu.Description,
+			itemMenu.Price,
 		)
 	if err != nil {
 		return nil, err
 	}
-	return &itemMenu, nil
+	return &pb.GetMenuItemResponse{MenuItem: &itemMenu}, nil
 }
 
 func (r *ReservationRepo) UpdateMenuItem(updateMenu *pb.UpdateMenuItemRequest) (*pb.UpdateMenuItemResponse, error) {
-	menu := pb.UpdateMenuItemResponse{}
+	menu := pb.MenuItem{}
 	err := r.DB.QueryRow(`	
 						UPDATE 
 						MENU
@@ -151,11 +152,13 @@ func (r *ReservationRepo) UpdateMenuItem(updateMenu *pb.UpdateMenuItemRequest) (
 						description,
 						price
 					`, updateMenu.RestaurantId, updateMenu.Name, updateMenu.Description, updateMenu.Price, updateMenu.Id).
-		Scan(menu.MenuItem.Id, menu.MenuItem.RestaurantId, menu.MenuItem.Name, menu.MenuItem.Description, menu.MenuItem.Price)
+		Scan(menu.Id, menu.RestaurantId, menu.Name, menu.Description, menu.Price)
 	if err != nil {
 		return nil, err
 	}
-	return &menu, nil
+	return &pb.UpdateMenuItemResponse{
+		MenuItem: &menu,
+	}, nil
 }
 
 func (r *ReservationRepo) DeleteMenuItem(id *pb.DeleteMenuItemRequest) (*pb.DeleteMenuItemResponse, error) {
