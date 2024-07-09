@@ -3,8 +3,9 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/lib/pq"
 	"reservation-service/config"
+
+	_ "github.com/lib/pq"
 )
 
 func Conn() (*sql.DB, error) {
@@ -20,5 +21,6 @@ func Conn() (*sql.DB, error) {
 	if err = db.Ping(); err != nil {
 		return nil, err
 	}
+	
 	return db, err
 }
