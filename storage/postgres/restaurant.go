@@ -51,7 +51,13 @@ func (r *RRestaurantRepo) CreateRestaurant(ctx context.Context, req *pb.CreateRe
 	return &pb.CreateRestaurantResponse{Restaurant: restaurant}, nil
 }
 
-func (r *RRestaurantRepo) ListRestaurants(ctx context.Context, req *pb.ListRestaurantsRequest) (*pb.ListRestaurantsResponse, error) {
+func (r *RRestaurantRepo) ListRestaurants(req *pb.ListRestaurantsRequest) (*pb.ListRestaurantsResponse, error) {
+	var (
+		params = make(map[string]interface{})
+		args []interface{}
+		filter string
+	)
+
 	query := `
 		SELECT 
 			id, 
@@ -62,9 +68,21 @@ func (r *RRestaurantRepo) ListRestaurants(ctx context.Context, req *pb.ListResta
 		FROM 
 			Restaurants 
 		WHERE 
-			deleted_at = 0;
+			deleted_at = 0 
 	`
-	rows, err := r.DB.Query(query)
+
+	if req.Name != ""{
+		params["name"] = req.Name
+		filter += " AND name = :name "
+	}
+	if req.Address != ""{
+		params["address"] = req.Address
+		filter += " AND address = :address "
+	}
+	query += filter
+
+	query,args = ReplaceQueryParams(query,params)
+	rows, err := r.DB.Query(query,args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list restaurants: %v", err)
 	}

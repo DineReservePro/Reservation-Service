@@ -50,7 +50,12 @@ func (r *RReservationRepo) CreateReservation(ctx context.Context, req *pb.Create
 	return &pb.CreateReservationResponse{Reservation: reservation}, nil
 }
 
-func (r *RReservationRepo) ListReservations(ctx context.Context, req *pb.ListReservationsRequest) (*pb.ListReservationsResponse, error) {
+func (r *RReservationRepo) ListReservations(req *pb.ListReservationsRequest) (*pb.ListReservationsResponse, error) {
+	var (
+		params = make(map[string]interface{})
+		args []interface{}
+		filter string
+	)
 	query := `
 		SELECT 
 			id, 
@@ -60,8 +65,25 @@ func (r *RReservationRepo) ListReservations(ctx context.Context, req *pb.ListRes
 			status 
 		FROM 
 			reservations 
-		WHERE deleted_at = 0;`
-	rows, err := r.DB.QueryContext(ctx, query)
+		WHERE deleted_at = 0 `
+	
+	if req.RestaurantId != ""{
+		params["restaurant_id"] = req.RestaurantId
+		filter += "AND restaurant_id = :restaurant_id"
+	}
+	if req.ReservationTime != ""{
+		params["reservation_time"] = req.ReservationTime
+		filter += "AND reservation_time = :reservation_time"
+	}
+	if req.Status != ""{
+		params["status"] = req.Status
+		filter += "AND status = :status"
+	}
+	query += filter
+
+	query,args = ReplaceQueryParams(query,params)
+
+	rows, err := r.DB.Query(query,args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list reservations: %v", err)
 	}
