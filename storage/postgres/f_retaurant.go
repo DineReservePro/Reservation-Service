@@ -8,8 +8,8 @@ import (
 	pb "reservation-service/generated/reservation_service"
 )
 
-func (r *RRestaurantRepo) CheckReservation(ctx context.Context, in *pb.CheckReservationRequest) (*pb.CheckReservationResponse, error) {
-	query := `SELECT * FROM reservations WHERE id = $1 AND reservation_time < now() at time zone 'UTC'`
+func (r *ReservationRepo) CheckReservation(ctx context.Context, in *pb.CheckReservationRequest) (*pb.CheckReservationResponse, error) {
+	query := `SELECT * FROM Reservations WHERE id = $1 AND reservation_time < now() at time zone 'UTC'`
 	_, err := r.DB.Query(query, in.RestaurantId)
 	if err != nil {
 		return nil, err
@@ -20,7 +20,7 @@ func (r *RRestaurantRepo) CheckReservation(ctx context.Context, in *pb.CheckRese
 	return &pb.CheckReservationResponse{Available: true}, nil
 }
 
-func (r *RRestaurantRepo) OrderMeals(ctx context.Context, in *pb.OrderMealsRequest) (*pb.OrderMealsResponse, error) {
+func (r *ReservationRepo) OrderMeals(ctx context.Context, in *pb.OrderMealsRequest) (*pb.OrderMealsResponse, error) {
 	r.DB.QueryRow("select id from menu where name = $1", in.Meals)
 	for _, meal := range in.Meals {
 		row := r.DB.QueryRow("select id from menu where name = $1", meal.Name)
@@ -38,6 +38,6 @@ values ($1, $2, $3)`, in.ReservationId, meal.Id, 1)
 	return &pb.OrderMealsResponse{}, nil
 }
 
-func (r *RRestaurantRepo) PayReservation(ctx context.Context, in *pb.PayReservationRequest) (*pb.PayReservationResponse, error) {
+func (r *ReservationRepo) PayReservation(ctx context.Context, in *pb.PayReservationRequest) (*pb.PayReservationResponse, error) {
 	return nil, nil
 }
