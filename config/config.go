@@ -10,7 +10,7 @@ import (
 type Config struct {
 	GRPC_PORT   string
 	DB_HOST     string
-	DB_PORT     string
+	DB_PORT     int
 	DB_USERNAME string
 	DB_DATABASE string
 	DB_PASSWORD string

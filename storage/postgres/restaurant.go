@@ -21,13 +21,30 @@ func NewRRestaurantRepo(db *sql.DB) *RRestaurantRepo {
 
 func (r *RRestaurantRepo) CreateRestaurant(ctx context.Context, req *pb.CreateRestaurantRequest) (*pb.CreateRestaurantResponse, error) {
 	query := `
-		INSERT INTO Restaurants (name, address, phone_number, description)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id, name, address, phone_number, description;
+		INSERT INTO Restaurants (
+			name, 
+			address, 
+			phone_number, 
+			description
+		)
+		VALUES (
+			$1, 
+			$2, 
+			$3, 
+			$4
+		)
+		RETURNING 
+			id, 
+			name, 
+			address, 
+			phone_number, 
+			description;
 	`
 	restaurant := &pb.Restaurant{}
+
 	err := r.DB.QueryRowContext(ctx, query, req.Name, req.Address, req.PhoneNumber, req.Description).Scan(
 		&restaurant.Id, &restaurant.Name, &restaurant.Address, &restaurant.PhoneNumber, &restaurant.Description)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to create restaurant: %v", err)
 	}
@@ -36,7 +53,16 @@ func (r *RRestaurantRepo) CreateRestaurant(ctx context.Context, req *pb.CreateRe
 
 func (r *RRestaurantRepo) ListRestaurants(ctx context.Context, req *pb.ListRestaurantsRequest) (*pb.ListRestaurantsResponse, error) {
 	query := `
-		SELECT id, name, address, phone_number, description FROM Restaurants WHERE deleted_at = 0;
+		SELECT 
+			id, 
+			name, 
+			address, 
+			phone_number, 
+			description 
+		FROM 
+			Restaurants 
+		WHERE 
+			deleted_at = 0;
 	`
 	rows, err := r.DB.Query(query)
 	if err != nil {
@@ -57,7 +83,16 @@ func (r *RRestaurantRepo) ListRestaurants(ctx context.Context, req *pb.ListResta
 
 func (r *RRestaurantRepo) GetRestaurant(ctx context.Context, req *pb.GetRestaurantRequest) (*pb.GetRestaurantResponse, error) {
 	query := `
-		SELECT id, name, address, phone_number, description FROM Restaurants WHERE id = $1 AND deleted_at = 0;
+		SELECT 
+			id, 
+			name, 
+			address, 
+			phone_number, 
+			description 
+		FROM 
+			Restaurants 
+		WHERE 
+			id = $1 AND deleted_at = 0;
 	`
 	restaurant := &pb.Restaurant{}
 	err := r.DB.QueryRow(query, req.Id).Scan(
@@ -73,9 +108,22 @@ func (r *RRestaurantRepo) GetRestaurant(ctx context.Context, req *pb.GetRestaura
 
 func (r *RRestaurantRepo) UpdateRestaurant(ctx context.Context, req *pb.UpdateRestaurantRequest) (*pb.UpdateRestaurantResponse, error) {
 	query := `
-		UPDATE Restaurants SET name = $2, address = $3, phone_number = $4, description = $5, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $1 AND deleted_at = 0
-		RETURNING id, name, address, phone_number, description;
+		UPDATE 
+			Restaurants 
+		SET 
+			name = $2, 
+			address = $3, 
+			phone_number = $4, 
+			description = $5, 
+			updated_at = CURRENT_TIMESTAMP
+		WHERE 
+			id = $1 AND deleted_at = 0
+		RETURNING 
+			id, 
+			name, 
+			address, 
+			phone_number, 
+			description;
 	`
 	restaurant := &pb.Restaurant{}
 	err := r.DB.QueryRow(query, req.Id, req.Name, req.Address, req.PhoneNumber, req.Description).Scan(
@@ -88,12 +136,15 @@ func (r *RRestaurantRepo) UpdateRestaurant(ctx context.Context, req *pb.UpdateRe
 
 func (r *RRestaurantRepo) DeleteRestaurant(ctx context.Context, req *pb.DeleteRestaurantRequest) (*pb.DeleteRestaurantResponse, error) {
 	query := `
-		UPDATE Restaurants SET deleted_at = EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)
-		WHERE id = $1 AND deleted_at = 0
-		RETURNING id;
+		UPDATE 
+			Restaurants 
+		SET 
+			deleted_at = EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)
+		WHERE 
+			id = $1 AND deleted_at = 0
 	`
-	var id string
-	err := r.DB.QueryRow(query, req.Id).Scan(&id)
+	
+	_, err := r.DB.Exec(query, req.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("restaurant not found")
