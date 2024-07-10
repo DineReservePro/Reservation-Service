@@ -8,7 +8,7 @@ import (
 )
 
 func TestCreateRestaurant(t *testing.T) {
-	db, err := Conn()
+	db, err := ConnectDB()
 	if err != nil {
 		t.Errorf("Failed database connection")
 		return
@@ -37,7 +37,7 @@ func TestCreateRestaurant(t *testing.T) {
 }
 
 func TestListRestaurants(t *testing.T) {
-	db, err := Conn()
+	db, err := ConnectDB()
 	if err != nil {
 		t.Errorf("Failed database connection")
 		return
@@ -61,7 +61,7 @@ func TestListRestaurants(t *testing.T) {
 }
 
 func TestGetRestaurant(t *testing.T){
-	db, err := Conn()
+	db, err := ConnectDB()
 	if err != nil {
 		t.Errorf("Failed database connection")
 		return
@@ -81,7 +81,7 @@ func TestGetRestaurant(t *testing.T){
 }
 
 func TestUpdateRestaurant(t *testing.T){
-	db, err := Conn()
+	db, err := ConnectDB()
 	if err != nil {
 		t.Errorf("Failed database connection")
 		return
@@ -111,7 +111,7 @@ func TestUpdateRestaurant(t *testing.T){
 }
 
 func TestDeleteRestaurant(t *testing.T){
-	db, err := Conn()
+	db, err := ConnectDB()
 	if err != nil {
 		t.Errorf("Failed database connection")
 		return

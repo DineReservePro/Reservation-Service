@@ -8,7 +8,7 @@ import (
 )
 
 func TestCreateMenuItem(t *testing.T) {
-	db, err := Conn()
+	db, err := ConnectDB()
 	if err != nil {
 		t.Errorf("failed to setup test database: %v", err)
 		return
@@ -16,7 +16,7 @@ func TestCreateMenuItem(t *testing.T) {
 	menuRepo := NewRRestaurantRepo(db)
 
 	menu := pb.CreateMenuItemRequest{
-		RestaurantId: "6751a219-6c1c-4676-b2fb-34dac8bfe41a",
+		RestaurantId: "a9a9858a-def9-4ab0-9925-a40177cd9b7d",
 		Name:         "Osh",
 		Description:  "Very good",
 		Price:        25000,
@@ -37,7 +37,7 @@ func TestCreateMenuItem(t *testing.T) {
 }
 
 func TestListMenuItems(t *testing.T) {
-	db, err := Conn()
+	db, err := ConnectDB()
 	if err != nil {
 		t.Errorf("failed to setup test database: %v", err)
 		return
@@ -62,7 +62,7 @@ func TestListMenuItems(t *testing.T) {
 }
 
 func TestGetMenuItem(t *testing.T) {
-	db, err := Conn()
+	db, err := ConnectDB()
 	if err != nil {
 		t.Errorf("failed to setup test database: %v", err)
 		return
@@ -83,7 +83,7 @@ func TestGetMenuItem(t *testing.T) {
 }
 
 func TestUpdateMenuItem(t *testing.T) {
-	db, err := Conn()
+	db, err := ConnectDB()
 	if err != nil {
 		t.Errorf("failed to setup test database: %v", err)
 		return
@@ -110,7 +110,7 @@ func TestUpdateMenuItem(t *testing.T) {
 }
 
 func TestDeleteMenuItem(t *testing.T){
-	db, err := Conn()
+	db, err := ConnectDB()
 	if err != nil {
 		t.Errorf("failed to setup test database: %v", err)
 		return

@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -160,4 +161,49 @@ func (r *ReservationRepo) DeleteReservation(req *pb.DeleteReservationRequest) (*
 		return nil, fmt.Errorf("failed to delete reservation: %v", err)
 	}
 	return &pb.DeleteReservationResponse{Message: "Reservation deleted successfully"}, nil
+}
+
+func (r *ReservationRepo) CheckReservation(ctx context.Context, in *pb.CheckReservationRequest) (*pb.CheckReservationResponse, error) {
+	var exists bool
+	err := r.DB.QueryRow(`
+		SELECT 
+			EXISTS (
+				SELECT
+					1
+				FROM 
+					Reservations 
+				WHERE 
+					restaurant_id = $1 
+					AND reservation_time >= NOW() - INTERVAL '30 minutes'
+			)
+	`, in.RestaurantId).Scan(&exists)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.CheckReservationResponse{Available: exists}, nil
+}
+
+func (r *ReservationRepo) OrderMeals(ctx context.Context, in *pb.OrderMealsRequest) (*pb.OrderMealsResponse, error) {
+
+	for _, meal := range in.Meals {
+		_, err := r.DB.Exec(`
+			INSERT INTO ReservationOrders (
+				reservation_id,
+				menu_item_iid,
+				quantity
+			)
+			VALUES (
+				$1,
+				$2,
+				$3
+			)
+		`, in.ReservationId, meal.MenuItemId, meal.Quantity)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &pb.OrderMealsResponse{Status: "success"}, nil
 }
