@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	db, err := postgres.Conn()
+	db, err := postgres.ConnectDB()
 	if err != nil {
 		panic(err)
 	}
