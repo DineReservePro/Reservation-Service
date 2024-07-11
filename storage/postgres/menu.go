@@ -70,6 +70,15 @@ func (r *ReservationRepo) ListMenuItems(listMenu *pb.ListMenuItemsRequest) (*pb.
 		filter += "AND price = :price"
 	}
 
+	if listMenu.Limit > 0{
+		params["limit"] = listMenu.Limit
+		filter += "AND limit = :limit"
+	}
+	if listMenu.Offset > 0{
+		params["offset"] = listMenu.Offset
+		filter += "AND offset = :offset"
+	}
+
 	query += filter
 
 	query, args = ReplaceQueryParams(query, params)
