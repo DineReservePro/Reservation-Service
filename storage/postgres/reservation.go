@@ -56,19 +56,28 @@ func (r *ReservationRepo) ListReservations(req *pb.ListReservationsRequest) (*pb
 			status 
 		FROM 
 			reservations 
-		WHERE deleted_at = 0 `
+		WHERE deleted_at = 0  `
 
 	if req.RestaurantId != "" {
 		params["restaurant_id"] = req.RestaurantId
-		filter += "AND restaurant_id = :restaurant_id"
+		filter += " AND restaurant_id = :restaurant_id "
 	}
 	if req.ReservationTime != "" {
 		params["reservation_time"] = req.ReservationTime
-		filter += "AND reservation_time = :reservation_time"
+		filter += " AND reservation_time = :reservation_time "
 	}
 	if req.Status != "" {
 		params["status"] = req.Status
-		filter += "AND status = :status"
+		filter += " AND status = :status "
+	}
+	if req.Limit > 0{
+		params["limit"] = req.Limit
+		filter += " AND limit = :limit "
+	}
+
+	if req.Offset > 0{
+		params["offset"] = req.Offset
+		filter += " AND offset = :offset"
 	}
 	query += filter
 

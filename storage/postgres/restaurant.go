@@ -78,6 +78,16 @@ func (r *ReservationRepo) ListRestaurants(req *pb.ListRestaurantsRequest) (*pb.L
 		params["address"] = req.Address
 		filter += " AND address = :address "
 	}
+
+	if req.Limit > 0{
+		params["limit"] = req.Limit
+		filter += " AND limit = :limit"
+	}
+
+	if req.Offset > 0{
+		params["offset"] = req.Offset
+		filter += " AND offset = :offset"
+	}
 	query += filter
 
 	query, args = ReplaceQueryParams(query, params)
