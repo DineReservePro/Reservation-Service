@@ -7,15 +7,20 @@ import (
 	pb "reservation-service/generated/reservation_service"
 
 	_ "github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 )
 
 type ReservationRepo struct {
 	pb.UnimplementedReservationServiceServer
 	DB *sql.DB
+	R *redis.Client
 }
 
-func NewRRestaurantRepo(db *sql.DB) *ReservationRepo {
-	return &ReservationRepo{DB: db}
+func NewRRestaurantRepo(db *sql.DB, r *redis.Client) *ReservationRepo {
+	return &ReservationRepo{
+		DB: db,
+		R: r,
+	}
 }
 
 func (r *ReservationRepo) CreateRestaurant(req *pb.CreateRestaurantRequest) (*pb.CreateRestaurantResponse, error) {

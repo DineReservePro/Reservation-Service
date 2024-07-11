@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	pb "reservation-service/generated/reservation_service"
 
@@ -174,7 +175,6 @@ func (r *ReservationRepo) CheckReservation(ctx context.Context, in *pb.CheckRese
 					Reservations 
 				WHERE 
 					restaurant_id = $1 
-					AND reservation_time >= NOW() - INTERVAL '30 minutes'
 			)
 	`, in.RestaurantId).Scan(&exists)
 
@@ -186,24 +186,36 @@ func (r *ReservationRepo) CheckReservation(ctx context.Context, in *pb.CheckRese
 }
 
 func (r *ReservationRepo) OrderMeals(ctx context.Context, in *pb.OrderMealsRequest) (*pb.OrderMealsResponse, error) {
-
-	for _, meal := range in.Meals {
-		_, err := r.DB.Exec(`
-			INSERT INTO ReservationOrders (
-				reservation_id,
-				menu_item_iid,
-				quantity
-			)
-			VALUES (
-				$1,
-				$2,
-				$3
-			)
-		`, in.ReservationId, meal.MenuItemId, meal.Quantity)
-
-		if err != nil {
-			return nil, err
-		}
+	var reservationTime time.Time
+	
+	err := r.DB.QueryRow(`
+		SELECT
+			reservation_time
+		FROM
+			reservations
+		WHERE 
+			deleted_at = 0 and id = $1
+	`, in.ReservationId).Scan(&reservationTime)
+	if err != nil {
+		return nil, err
 	}
+
+	// Ovqat buyurtmalarini Redis-ga bir marta HSet bilan qo'shish
+	mealData := make(map[string]interface{})
+	for _, meal := range in.Meals {
+		mealData[meal.MenuItemId] = meal.Quantity
+	}
+	err = r.R.HSet(ctx, in.ReservationId, mealData).Err()
+	if err != nil {
+		return nil, err
+	}
+
+	// Redisda saqlash muddatini belgilash (expiring key)
+	expiration := time.Until(reservationTime)
+	err = r.R.Expire(ctx, in.ReservationId, expiration).Err()
+	if err != nil {
+		return nil, err
+	}
+	
 	return &pb.OrderMealsResponse{Status: "success"}, nil
 }

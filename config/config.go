@@ -28,7 +28,7 @@ func Load() Config {
 	cfg.DB_USERNAME = cast.ToString(Coalesce("DB_USERNAME", "postgres"))
 	cfg.DB_DATABASE = cast.ToString(Coalesce("DB_DATABASE", "reservation_service"))
 	cfg.DB_PASSWORD = cast.ToString(Coalesce("DB_PASSWORD", "03212164"))
-	cfg.GRPC_PORT = cast.ToString(Coalesce("GRPC_PORT", "50051"))
+	cfg.GRPC_PORT = cast.ToString(Coalesce("GRPC_PORT", ":50051"))
 
 	return cfg
 }

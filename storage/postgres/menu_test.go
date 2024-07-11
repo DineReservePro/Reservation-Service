@@ -2,6 +2,7 @@ package postgres
 
 import (
 	pb "reservation-service/generated/reservation_service"
+	"reservation-service/storage/redis"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,7 +14,8 @@ func TestCreateMenuItem(t *testing.T) {
 		t.Errorf("failed to setup test database: %v", err)
 		return
 	}
-	menuRepo := NewRRestaurantRepo(db)
+	r := redis.ConnectR()
+	menuRepo := NewRRestaurantRepo(db, r)
 
 	menu := pb.CreateMenuItemRequest{
 		RestaurantId: "a9a9858a-def9-4ab0-9925-a40177cd9b7d",
@@ -42,7 +44,8 @@ func TestListMenuItems(t *testing.T) {
 		t.Errorf("failed to setup test database: %v", err)
 		return
 	}
-	menuRepo := NewRRestaurantRepo(db)
+	r := redis.ConnectR()
+	menuRepo := NewRRestaurantRepo(db, r)
 	reqMenu := pb.ListMenuItemsRequest{
 		RestaurantId: "6751a219-6c1c-4676-b2fb-34dac8bfe41a",
 		Name:         "Osh",
@@ -67,7 +70,8 @@ func TestGetMenuItem(t *testing.T) {
 		t.Errorf("failed to setup test database: %v", err)
 		return
 	}
-	menuRepo := NewRRestaurantRepo(db)
+	r := redis.ConnectR()
+	menuRepo := NewRRestaurantRepo(db, r)
 	id := pb.GetMenuItemRequest{
 		Id: "be933d44-3822-43f0-bcde-940bfb724dff",
 	}
@@ -88,42 +92,44 @@ func TestUpdateMenuItem(t *testing.T) {
 		t.Errorf("failed to setup test database: %v", err)
 		return
 	}
-	menuRepo := NewRRestaurantRepo(db)
+	r := redis.ConnectR()
+	menuRepo := NewRRestaurantRepo(db, r)
 	menu := pb.UpdateMenuItemRequest{
-		Id: "be933d44-3822-43f0-bcde-940bfb724dff",
+		Id:           "be933d44-3822-43f0-bcde-940bfb724dff",
 		RestaurantId: "6751a219-6c1c-4676-b2fb-34dac8bfe41a",
-		Name: "Mastava",
-		Description: "dsfa",
-		Price: 13000,
+		Name:         "Mastava",
+		Description:  "dsfa",
+		Price:        13000,
 	}
-	updateMenu,err := menuRepo.UpdateMenuItem(&menu)
-	if err != nil{
-		t.Errorf("ERROR : %v",err)
+	updateMenu, err := menuRepo.UpdateMenuItem(&menu)
+	if err != nil {
+		t.Errorf("ERROR : %v", err)
 		return
 	}
 
-	assert.Equal(t,menu.Id,updateMenu.MenuItem.Id)
-	assert.Equal(t,menu.RestaurantId,updateMenu.MenuItem.RestaurantId)
-	assert.Equal(t,menu.Name,updateMenu.MenuItem.Name)
-	assert.Equal(t,menu.Description,updateMenu.MenuItem.Description)
-	assert.Equal(t,menu.Price,updateMenu.MenuItem.Price)
+	assert.Equal(t, menu.Id, updateMenu.MenuItem.Id)
+	assert.Equal(t, menu.RestaurantId, updateMenu.MenuItem.RestaurantId)
+	assert.Equal(t, menu.Name, updateMenu.MenuItem.Name)
+	assert.Equal(t, menu.Description, updateMenu.MenuItem.Description)
+	assert.Equal(t, menu.Price, updateMenu.MenuItem.Price)
 }
 
-func TestDeleteMenuItem(t *testing.T){
+func TestDeleteMenuItem(t *testing.T) {
 	db, err := ConnectDB()
 	if err != nil {
 		t.Errorf("failed to setup test database: %v", err)
 		return
 	}
-	menuRepo := NewRRestaurantRepo(db)
+	r := redis.ConnectR()
+	menuRepo := NewRRestaurantRepo(db, r)
 	id := pb.DeleteMenuItemRequest{
 		Id: "903cca44-1f9e-487f-9529-ecc06173f042",
 	}
-	res,err := menuRepo.DeleteMenuItem(&id)
-	if err != nil{
-		t.Errorf("ERROR : %v",err)
+	res, err := menuRepo.DeleteMenuItem(&id)
+	if err != nil {
+		t.Errorf("ERROR : %v", err)
 		return
 	}
 
-	assert.NotEmpty(t,res)
+	assert.NotEmpty(t, res)
 }
