@@ -7,7 +7,7 @@ import (
 )
 
 func (r *ReservationRepo) CreateMenuItem(menuItem *pb.CreateMenuItemRequest) (*pb.CreateMenuItemResponse, error) {
-
+	r.logger.Info("CreateMenuItem storage")
 	menu := pb.MenuItem{}
 	err := r.DB.QueryRow(`
 		INSERT INTO Menu (
@@ -31,6 +31,7 @@ func (r *ReservationRepo) CreateMenuItem(menuItem *pb.CreateMenuItemRequest) (*p
 		menuItem.RestaurantId, menuItem.Name, menuItem.Description, menuItem.Price,
 	).Scan(&menu.Id, &menu.RestaurantId, &menu.Name, &menu.Description, &menu.Price)
 	if err != nil {
+		r.logger.Error("failed to insert ro Menu")
 		return nil, err
 	}
 	return &pb.CreateMenuItemResponse{
@@ -39,6 +40,7 @@ func (r *ReservationRepo) CreateMenuItem(menuItem *pb.CreateMenuItemRequest) (*p
 }
 
 func (r *ReservationRepo) ListMenuItems(listMenu *pb.ListMenuItemsRequest) (*pb.ListMenuItemsResponse, error) {
+	r.logger.Info("ListMenuItems storage")
 	var (
 		params = make(map[string]interface{})
 		args   []interface{}
@@ -70,11 +72,11 @@ func (r *ReservationRepo) ListMenuItems(listMenu *pb.ListMenuItemsRequest) (*pb.
 		filter += "AND price = :price"
 	}
 
-	if listMenu.Limit > 0{
+	if listMenu.Limit > 0 {
 		params["limit"] = listMenu.Limit
 		filter += "AND limit = :limit"
 	}
-	if listMenu.Offset > 0{
+	if listMenu.Offset > 0 {
 		params["offset"] = listMenu.Offset
 		filter += "AND offset = :offset"
 	}
@@ -85,6 +87,7 @@ func (r *ReservationRepo) ListMenuItems(listMenu *pb.ListMenuItemsRequest) (*pb.
 
 	rows, err := r.DB.Query(query, args...)
 	if err != nil {
+		r.logger.Error("failed to in list Menu")
 		return nil, err
 	}
 	ListMenu := []*pb.MenuItem{}
@@ -92,6 +95,7 @@ func (r *ReservationRepo) ListMenuItems(listMenu *pb.ListMenuItemsRequest) (*pb.
 		menu := pb.MenuItem{}
 		err := rows.Scan(&menu.Id, &menu.RestaurantId, &menu.Name, &menu.Description, &menu.Price)
 		if err != nil {
+			r.logger.Error("failed in scan in List Menu")
 			return nil, err
 		}
 		ListMenu = append(ListMenu, &menu)
@@ -100,6 +104,7 @@ func (r *ReservationRepo) ListMenuItems(listMenu *pb.ListMenuItemsRequest) (*pb.
 }
 
 func ReplaceQueryParams(namedQuery string, params map[string]interface{}) (string, []interface{}) {
+
 	var (
 		ind  int = 1
 		args []interface{}
@@ -117,6 +122,7 @@ func ReplaceQueryParams(namedQuery string, params map[string]interface{}) (strin
 }
 
 func (r *ReservationRepo) GetMenuItem(id *pb.GetMenuItemRequest) (*pb.GetMenuItemResponse, error) {
+	r.logger.Info("GetMenuItem storage")
 	itemMenu := pb.MenuItem{}
 	err := r.DB.QueryRow(`	SELECT
 								id,
@@ -137,12 +143,14 @@ func (r *ReservationRepo) GetMenuItem(id *pb.GetMenuItemRequest) (*pb.GetMenuIte
 			&itemMenu.Price,
 		)
 	if err != nil {
+		r.logger.Error("failed to get menu item")
 		return nil, err
 	}
 	return &pb.GetMenuItemResponse{MenuItem: &itemMenu}, nil
 }
 
 func (r *ReservationRepo) UpdateMenuItem(updateMenu *pb.UpdateMenuItemRequest) (*pb.UpdateMenuItemResponse, error) {
+	r.logger.Info("UpdateMenuItem storage")
 	menu := pb.MenuItem{}
 	err := r.DB.QueryRow(`	
 						UPDATE 
@@ -163,6 +171,7 @@ func (r *ReservationRepo) UpdateMenuItem(updateMenu *pb.UpdateMenuItemRequest) (
 					`, updateMenu.RestaurantId, updateMenu.Name, updateMenu.Description, updateMenu.Price, updateMenu.Id).
 		Scan(&menu.Id, &menu.RestaurantId, &menu.Name, &menu.Description, &menu.Price)
 	if err != nil {
+		r.logger.Error("failed to update menu item")
 		return nil, err
 	}
 	return &pb.UpdateMenuItemResponse{
@@ -171,17 +180,18 @@ func (r *ReservationRepo) UpdateMenuItem(updateMenu *pb.UpdateMenuItemRequest) (
 }
 
 func (r *ReservationRepo) DeleteMenuItem(id *pb.DeleteMenuItemRequest) (*pb.DeleteMenuItemResponse, error) {
-	_,err := r.DB.Exec(`	DELETE
+	_, err := r.DB.Exec(`	DELETE
 				FROM
 					Menu
 				WHERE
-					id = $1`,id.Id)
-	if err != nil{
+					id = $1`, id.Id)
+	if err != nil {
+		r.logger.Error("failed to delete menu item")
 		return &pb.DeleteMenuItemResponse{
 			Message: "FAILD TO DELETED MENU ITEM",
-		},err
+		}, err
 	}
 	return &pb.DeleteMenuItemResponse{
 		Message: "DELETED SUCCESFULLY MENU ITEM",
-	},nil
+	}, nil
 }

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 	pb "reservation-service/generated/reservation_service"
 
 	_ "github.com/lib/pq"
@@ -12,18 +13,20 @@ import (
 
 type ReservationRepo struct {
 	pb.UnimplementedReservationServiceServer
-	DB *sql.DB
-	R *redis.Client
+	DB     *sql.DB
+	R      *redis.Client
+	logger *slog.Logger
 }
 
 func NewRRestaurantRepo(db *sql.DB, r *redis.Client) *ReservationRepo {
 	return &ReservationRepo{
 		DB: db,
-		R: r,
+		R:  r,
 	}
 }
 
 func (r *ReservationRepo) CreateRestaurant(req *pb.CreateRestaurantRequest) (*pb.CreateRestaurantResponse, error) {
+	r.logger.Info("CreateRestaurant storage")
 	query := `
 		INSERT INTO Restaurants (
 			name, 
@@ -50,12 +53,14 @@ func (r *ReservationRepo) CreateRestaurant(req *pb.CreateRestaurantRequest) (*pb
 		&restaurant.Id, &restaurant.Name, &restaurant.Address, &restaurant.PhoneNumber, &restaurant.Description)
 
 	if err != nil {
+		r.logger.Error("failed to create restaurant", err)
 		return nil, fmt.Errorf("failed to create restaurant: %v", err)
 	}
 	return &pb.CreateRestaurantResponse{Restaurant: restaurant}, nil
 }
 
 func (r *ReservationRepo) ListRestaurants(req *pb.ListRestaurantsRequest) (*pb.ListRestaurantsResponse, error) {
+	r.logger.Info("ListRestaurants storage")
 	var (
 		params = make(map[string]interface{})
 		args   []interface{}
@@ -84,12 +89,12 @@ func (r *ReservationRepo) ListRestaurants(req *pb.ListRestaurantsRequest) (*pb.L
 		filter += " AND address = :address "
 	}
 
-	if req.Limit > 0{
+	if req.Limit > 0 {
 		params["limit"] = req.Limit
 		filter += " AND limit = :limit"
 	}
 
-	if req.Offset > 0{
+	if req.Offset > 0 {
 		params["offset"] = req.Offset
 		filter += " AND offset = :offset"
 	}
@@ -98,6 +103,7 @@ func (r *ReservationRepo) ListRestaurants(req *pb.ListRestaurantsRequest) (*pb.L
 	query, args = ReplaceQueryParams(query, params)
 	rows, err := r.DB.Query(query, args...)
 	if err != nil {
+		r.logger.Error("failed to list restaurants", err)
 		return nil, fmt.Errorf("failed to list restaurants: %v", err)
 	}
 	defer rows.Close()
@@ -106,6 +112,7 @@ func (r *ReservationRepo) ListRestaurants(req *pb.ListRestaurantsRequest) (*pb.L
 	for rows.Next() {
 		restaurant := &pb.Restaurant{}
 		if err := rows.Scan(&restaurant.Id, &restaurant.Name, &restaurant.Address, &restaurant.PhoneNumber, &restaurant.Description); err != nil {
+			r.logger.Error("failed ro scan restaurant", err)
 			return nil, fmt.Errorf("failed to scan restaurant: %v", err)
 		}
 		restaurants = append(restaurants, restaurant)
@@ -114,6 +121,7 @@ func (r *ReservationRepo) ListRestaurants(req *pb.ListRestaurantsRequest) (*pb.L
 }
 
 func (r *ReservationRepo) GetRestaurant(req *pb.GetRestaurantRequest) (*pb.GetRestaurantResponse, error) {
+	r.logger.Info("GetRestaurant storage")
 	query := `
 		SELECT 
 			id, 
@@ -130,7 +138,9 @@ func (r *ReservationRepo) GetRestaurant(req *pb.GetRestaurantRequest) (*pb.GetRe
 	err := r.DB.QueryRow(query, req.Id).Scan(
 		&restaurant.Id, &restaurant.Name, &restaurant.Address, &restaurant.PhoneNumber, &restaurant.Description)
 	if err != nil {
+		r.logger.Error("failed to get restaurant", err)
 		if errors.Is(err, sql.ErrNoRows) {
+			r.logger.Error("restaurant not found")
 			return nil, fmt.Errorf("restaurant not found")
 		}
 		return nil, fmt.Errorf("failed to get restaurant: %v", err)
@@ -139,6 +149,7 @@ func (r *ReservationRepo) GetRestaurant(req *pb.GetRestaurantRequest) (*pb.GetRe
 }
 
 func (r *ReservationRepo) UpdateRestaurant(req *pb.UpdateRestaurantRequest) (*pb.UpdateRestaurantResponse, error) {
+	r.logger.Info("UpdateRestaurant storage")
 	query := `
 		UPDATE 
 			Restaurants 
@@ -161,12 +172,14 @@ func (r *ReservationRepo) UpdateRestaurant(req *pb.UpdateRestaurantRequest) (*pb
 	err := r.DB.QueryRow(query, req.Id, req.Name, req.Address, req.PhoneNumber, req.Description).Scan(
 		&restaurant.Id, &restaurant.Name, &restaurant.Address, &restaurant.PhoneNumber, &restaurant.Description)
 	if err != nil {
+		r.logger.Error("failed to update restaurant", err)
 		return nil, fmt.Errorf("failed to update restaurant: %v", err)
 	}
 	return &pb.UpdateRestaurantResponse{Restaurant: restaurant}, nil
 }
 
 func (r *ReservationRepo) DeleteRestaurant(req *pb.DeleteRestaurantRequest) (*pb.DeleteRestaurantResponse, error) {
+	r.logger.Info("DeleteRestaurant storage")
 	query := `
 		UPDATE 
 			Restaurants 
@@ -178,7 +191,9 @@ func (r *ReservationRepo) DeleteRestaurant(req *pb.DeleteRestaurantRequest) (*pb
 
 	_, err := r.DB.Exec(query, req.Id)
 	if err != nil {
+		r.logger.Error("failed to delete restaurant", err)
 		if errors.Is(err, sql.ErrNoRows) {
+			r.logger.Error("restaurant not found")
 			return nil, fmt.Errorf("restaurant not found")
 		}
 		return nil, fmt.Errorf("failed to delete restaurant: %v", err)

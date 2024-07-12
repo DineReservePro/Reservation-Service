@@ -12,23 +12,25 @@ import (
 )
 
 func main() {
+	config.InitLogger()
+	logger := config.Logger
+	logger.Info("Starting the application...")
+
 	db, err := postgres.ConnectDB()
 	if err != nil {
 		panic(err)
 	}
 	defer db.Close()
 	r := redis.ConnectR()
-
-	config := config.Load()
-
-	listener, err := net.Listen("tcp", config.GRPC_PORT)
-	if err != nil{
+	cfg := config.Load()
+	listener, err := net.Listen("tcp", cfg.GRPC_PORT)
+	if err != nil {
 		panic(err)
 	}
 	s := service.NewRRestaurantService(*postgres.NewRRestaurantRepo(db, r))
 	server := grpc.NewServer()
-	pb.RegisterReservationServiceServer(server,s)
-	if err = server.Serve(listener);err != nil{
+	pb.RegisterReservationServiceServer(server, s)
+	if err = server.Serve(listener); err != nil {
 		panic(err)
 	}
 }

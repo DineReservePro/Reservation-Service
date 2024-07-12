@@ -13,6 +13,7 @@ import (
 )
 
 func (r *ReservationRepo) CreateReservation(req *pb.CreateReservationRequest) (*pb.CreateReservationResponse, error) {
+	r.logger.Info("Create Reservation storage")
 	query := `
 		INSERT INTO reservations (
 			user_id, 
@@ -37,12 +38,14 @@ func (r *ReservationRepo) CreateReservation(req *pb.CreateReservationRequest) (*
 	err := r.DB.QueryRow(query, req.UserId, req.RestaurantId, req.ReservationTime, req.Status).Scan(
 		&reservation.Id, &reservation.UserId, &reservation.RestaurantId, &reservation.ReservationTime, &reservation.Status)
 	if err != nil {
+		r.logger.Error("Failed to create reservation", err)
 		return nil, fmt.Errorf("failed to create reservation: %v", err)
 	}
 	return &pb.CreateReservationResponse{Reservation: reservation}, nil
 }
 
 func (r *ReservationRepo) ListReservations(req *pb.ListReservationsRequest) (*pb.ListReservationsResponse, error) {
+	r.logger.Info("List Reservation storage")
 	var (
 		params = make(map[string]interface{})
 		args   []interface{}
@@ -71,12 +74,12 @@ func (r *ReservationRepo) ListReservations(req *pb.ListReservationsRequest) (*pb
 		params["status"] = req.Status
 		filter += " AND status = :status "
 	}
-	if req.Limit > 0{
+	if req.Limit > 0 {
 		params["limit"] = req.Limit
 		filter += " AND limit = :limit "
 	}
 
-	if req.Offset > 0{
+	if req.Offset > 0 {
 		params["offset"] = req.Offset
 		filter += " AND offset = :offset"
 	}
@@ -86,6 +89,7 @@ func (r *ReservationRepo) ListReservations(req *pb.ListReservationsRequest) (*pb
 
 	rows, err := r.DB.Query(query, args...)
 	if err != nil {
+		r.logger.Error("failed to list reservations", err)
 		return nil, fmt.Errorf("failed to list reservations: %v", err)
 	}
 	defer rows.Close()
@@ -94,6 +98,7 @@ func (r *ReservationRepo) ListReservations(req *pb.ListReservationsRequest) (*pb
 	for rows.Next() {
 		reservation := &pb.Reservation{}
 		if err := rows.Scan(&reservation.Id, &reservation.UserId, &reservation.RestaurantId, &reservation.ReservationTime, &reservation.Status); err != nil {
+			r.logger.Error("failed to scan reservations", err)
 			return nil, fmt.Errorf("failed to scan reservations: %v", err)
 		}
 		reservations = append(reservations, reservation)
@@ -102,6 +107,7 @@ func (r *ReservationRepo) ListReservations(req *pb.ListReservationsRequest) (*pb
 }
 
 func (r *ReservationRepo) GetReservation(req *pb.GetReservationRequest) (*pb.GetReservationResponse, error) {
+	r.logger.Info("Get Reservation storage")
 	query := `
 		SELECT 
 			id, 
@@ -117,7 +123,9 @@ func (r *ReservationRepo) GetReservation(req *pb.GetReservationRequest) (*pb.Get
 	err := r.DB.QueryRow(query, req.Id).Scan(
 		&reservation.Id, &reservation.UserId, &reservation.RestaurantId, &reservation.ReservationTime, &reservation.Status)
 	if err != nil {
+		r.logger.Error("Failed to get reservation", err)
 		if errors.Is(err, sql.ErrNoRows) {
+			r.logger.Error("reservation not found", err)
 			return nil, fmt.Errorf("reservation not found")
 		}
 		return nil, fmt.Errorf("failed to get reservation: %v", err)
@@ -126,6 +134,7 @@ func (r *ReservationRepo) GetReservation(req *pb.GetReservationRequest) (*pb.Get
 }
 
 func (r *ReservationRepo) UpdateReservation(req *pb.UpdateReservationRequest) (*pb.UpdateReservationResponse, error) {
+	r.logger.Info("Update Reservation storage")
 	query := `
 		UPDATE 
 			reservations 
@@ -148,12 +157,14 @@ func (r *ReservationRepo) UpdateReservation(req *pb.UpdateReservationRequest) (*
 	err := r.DB.QueryRow(query, req.Id, req.UserId, req.RestaurantId, req.ReservationTime, req.Status).Scan(
 		&reservation.Id, &reservation.UserId, &reservation.RestaurantId, &reservation.ReservationTime, &reservation.Status)
 	if err != nil {
+		r.logger.Error("failed to update reservation", err)
 		return nil, fmt.Errorf("failed to update reservation: %v", err)
 	}
 	return &pb.UpdateReservationResponse{Reservation: reservation}, nil
 }
 
 func (r *ReservationRepo) DeleteReservation(req *pb.DeleteReservationRequest) (*pb.DeleteReservationResponse, error) {
+	r.logger.Info("Delete Reservation storage")
 	query := `
 		UPDATE 
 			reservations 
@@ -165,7 +176,9 @@ func (r *ReservationRepo) DeleteReservation(req *pb.DeleteReservationRequest) (*
 
 	_, err := r.DB.Exec(query, req.Id)
 	if err != nil {
+		r.logger.Error("failed to delete reservation", err)
 		if errors.Is(err, sql.ErrNoRows) {
+			r.logger.Error("reservation not found", err)
 			return nil, fmt.Errorf("reservation not found")
 		}
 		return nil, fmt.Errorf("failed to delete reservation: %v", err)
@@ -174,6 +187,7 @@ func (r *ReservationRepo) DeleteReservation(req *pb.DeleteReservationRequest) (*
 }
 
 func (r *ReservationRepo) CheckReservation(ctx context.Context, in *pb.CheckReservationRequest) (*pb.CheckReservationResponse, error) {
+	r.logger.Info("Check Reservation storage")
 	var exists bool
 	err := r.DB.QueryRow(`
 		SELECT 
@@ -195,8 +209,9 @@ func (r *ReservationRepo) CheckReservation(ctx context.Context, in *pb.CheckRese
 }
 
 func (r *ReservationRepo) OrderMeals(ctx context.Context, in *pb.OrderMealsRequest) (*pb.OrderMealsResponse, error) {
+	r.logger.Info("Order Meals storage")
 	var reservationTime time.Time
-	
+
 	err := r.DB.QueryRow(`
 		SELECT
 			reservation_time
@@ -206,6 +221,7 @@ func (r *ReservationRepo) OrderMeals(ctx context.Context, in *pb.OrderMealsReque
 			deleted_at = 0 and id = $1
 	`, in.ReservationId).Scan(&reservationTime)
 	if err != nil {
+		r.logger.Error("failed to order meals", err)
 		return nil, err
 	}
 
@@ -216,6 +232,7 @@ func (r *ReservationRepo) OrderMeals(ctx context.Context, in *pb.OrderMealsReque
 	}
 	err = r.R.HSet(ctx, in.ReservationId, mealData).Err()
 	if err != nil {
+		r.logger.Error("Redis OrderMeals failed to HSet (accept values)", err)
 		return nil, err
 	}
 
@@ -223,8 +240,9 @@ func (r *ReservationRepo) OrderMeals(ctx context.Context, in *pb.OrderMealsReque
 	expiration := time.Until(reservationTime)
 	err = r.R.Expire(ctx, in.ReservationId, expiration).Err()
 	if err != nil {
+		r.logger.Error("Redis OrderMeals Expire failed", err)
 		return nil, err
 	}
-	
+
 	return &pb.OrderMealsResponse{Status: "success"}, nil
 }
