@@ -13,13 +13,13 @@ import (
 type ReservationRepo struct {
 	pb.UnimplementedReservationServiceServer
 	DB *sql.DB
-	R *redis.Client
+	R  *redis.Client
 }
 
 func NewRRestaurantRepo(db *sql.DB, r *redis.Client) *ReservationRepo {
 	return &ReservationRepo{
 		DB: db,
-		R: r,
+		R:  r,
 	}
 }
 
@@ -84,12 +84,12 @@ func (r *ReservationRepo) ListRestaurants(req *pb.ListRestaurantsRequest) (*pb.L
 		filter += " AND address = :address "
 	}
 
-	if req.Limit > 0{
+	if req.Limit > 0 {
 		params["limit"] = req.Limit
 		filter += " AND limit = :limit"
 	}
 
-	if req.Offset > 0{
+	if req.Offset > 0 {
 		params["offset"] = req.Offset
 		filter += " AND offset = :offset"
 	}
